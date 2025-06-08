@@ -21,10 +21,6 @@ interface Quote {
   author: string;
 }
 
-function getRandomTag() {
-  return TAGS[Math.floor(Math.random() * TAGS.length)];
-}
-
 export default function Home() {
   const [imageUrl, setImageUrl] = useState('https://picsum.photos/1080/1920');
   const [selectedTag, setSelectedTag] = useState('technology');
@@ -53,13 +49,6 @@ export default function Home() {
   useEffect(() => {
     fetchQuote(selectedTag);
   }, [selectedTag]);
-
-  // Handler for random tag and image
-  const handleRandomize = () => {
-    const randomTag = getRandomTag();
-    setSelectedTag(randomTag);
-    generateNewImage();
-  };
 
   const handleExport = async () => {
     if (!containerRef.current) return;

@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Statuz - Quote Generator App
 
-## Getting Started
+## Building Android APK
 
-First, run the development server:
+### Prerequisites
+- Android Studio installed
+- Node.js and npm installed
+- Android SDK installed
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Steps to Build APK
+
+1. **Set up Java Environment**
+   ```bash
+   # Use Android Studio's bundled JDK
+   export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+   ```
+
+2. **Clean the Project**
+   ```bash
+   cd android
+   ./gradlew clean
+   ```
+
+3. **Build Debug APK**
+   ```bash
+   ./gradlew assembleDebug
+   ```
+
+The generated APK will be located at:
+```
+android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Troubleshooting
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If you encounter Java version compatibility issues:
+1. Make sure you're using Android Studio's bundled JDK
+2. If using a different JDK, ensure it's Java 17
+3. Clean the Gradle cache if needed:
+   ```bash
+   rm -rf ~/.gradle/caches/
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Project Structure
+- `android/` - Android project files
+- `src/` - Source code
+- `public/` - Public assets
 
-## Learn More
+### Dependencies
+- React
+- Next.js
+- Capacitor
+- Android SDK
 
-To learn more about Next.js, take a look at the following resources:
+### Development
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Run development server:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Build for production:
+   ```bash
+   npm run build
+   ```
 
-## Deploy on Vercel
+### Android Development
+1. Open the project in Android Studio:
+   ```bash
+   cd android
+   open -a "Android Studio" .
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Sync project with Gradle files
+3. Build and run from Android Studio or use the command line steps above
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Notes
+- The app uses WebView to display content
+- Network security is configured to allow API access
+- JavaScript is enabled in WebView for proper functionality
