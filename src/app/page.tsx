@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import html2canvas from 'html2canvas';
 
 const TAGS = [
   'business', 'change', 'character', 'competition', 'courage', 'creativity',
@@ -29,6 +30,8 @@ export default function Home() {
   const [selectedTag, setSelectedTag] = useState('technology');
   const [quote, setQuote] = useState<Quote | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const generateNewImage = () => {
     // Add timestamp to prevent caching
@@ -58,10 +61,106 @@ export default function Home() {
     generateNewImage();
   };
 
+  const handleExport = async () => {
+    if (!containerRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      // Get the actual image element from the page
+      const originalImage = containerRef.current.querySelector('img');
+      if (!originalImage) return;
+
+      // Create a temporary container
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = '430px';
+      tempContainer.style.height = '764px'; // 430 * (16/9)
+      tempContainer.style.backgroundColor = '#000000';
+      document.body.appendChild(tempContainer);
+
+      // Clone the actual image element
+      const img = originalImage.cloneNode(true) as HTMLImageElement;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '8px';
+      tempContainer.appendChild(img);
+
+      // Create quote container
+      if (quote) {
+        const quoteContainer = document.createElement('div');
+        quoteContainer.style.position = 'absolute';
+        quoteContainer.style.top = '50%';
+        quoteContainer.style.left = '50%';
+        quoteContainer.style.transform = 'translate(-50%, -50%)';
+        quoteContainer.style.width = '90%';
+        quoteContainer.style.maxWidth = '95%';
+        quoteContainer.style.textAlign = 'center';
+        quoteContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        quoteContainer.style.padding = '12px';
+        quoteContainer.style.borderRadius = '8px';
+
+        // Create quote text
+        const quoteText = document.createElement('p');
+        quoteText.textContent = quote.content;
+        quoteText.style.color = '#ffffff';
+        quoteText.style.fontSize = '18px';
+        quoteText.style.marginBottom = '4px';
+        quoteText.style.wordBreak = 'break-word';
+        quoteContainer.appendChild(quoteText);
+
+        // Create author text
+        const authorText = document.createElement('p');
+        authorText.textContent = `- ${quote.author}`;
+        authorText.style.color = 'rgba(255, 255, 255, 0.8)';
+        authorText.style.fontSize = '14px';
+        quoteContainer.appendChild(authorText);
+
+        tempContainer.appendChild(quoteContainer);
+      }
+
+      // Wait for image to load
+      await new Promise((resolve) => {
+        if (img.complete) {
+          resolve(true);
+        } else {
+          img.onload = () => resolve(true);
+        }
+      });
+
+      const canvas = await html2canvas(tempContainer, {
+        useCORS: true,
+        allowTaint: true,
+        background: '#000000',
+        logging: false
+      });
+      
+      // Clean up temporary container
+      document.body.removeChild(tempContainer);
+      
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `quote-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 'image/png', 1.0);
+    } catch (error) {
+      console.error('Error exporting image:', error);
+    }
+    setIsExporting(false);
+  };
+
   return (
     <main className="fixed inset-0 flex items-center justify-center bg-black">
       {/* Aspect-ratio box for image and overlays */}
-      <div className="relative w-[90vw] max-w-[430px] aspect-[9/16] flex items-center justify-center">
+      <div ref={containerRef} className="relative w-[90vw] max-w-[430px] aspect-[9/16] flex items-center justify-center">
         {/* Image fills the aspect box */}
         <Image
           src={imageUrl}
@@ -121,12 +220,22 @@ export default function Home() {
             </div>
             {/* Divider above Generate New Image */}
             <div className="w-full border-t border-white/20 my-2"></div>
-            <button
-              onClick={generateNewImage}
-              className="px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors w-full font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              Change Background
-            </button>
+            {/* Button group for Change Background and Export */}
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={generateNewImage}
+                className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                Change Background
+              </button>
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExporting ? 'Exporting...' : 'Export'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
